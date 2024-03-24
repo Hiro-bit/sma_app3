@@ -1,0 +1,35 @@
+/* Table style */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Table header style */
+th {
+    background-color: #f2f2f2;
+    padding: 8px;
+    text-align: left;
+}
+
+/* Table cell style */
+td {
+    padding: 8px;
+    text-align: left;
+}
+
+/* Bold style for closing place when SMA is higher */
+td.bold {
+    font-weight: bold;
+}
+
+/* List style for SMA data */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+/* Strong style for SMA data when higher than closing place */
+li strong {
+    font-weight: bold;
+    color: #007bff; /* Blue color */
+}

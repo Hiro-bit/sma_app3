@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMA Data</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Stock Code</th>
+                <th>Company Name</th>
+                <th>Closing Place</th>
+                <th>Dividend Yield</th>
+                <th>SMA Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+            <tr>
+                <td class="bold">{{ item.stock_code }}</td>
+                <td class="bold">{{ item.company_name }}</td>
+                <td {% if item.closing_place < max_sma_values[item.stock_code] %} class="bold" {% endif %}>{{ item.closing_place }}</td>
+                <td>{{ item.dividend_yield }}</td>
+                <td>
+                    <ul>
+                        {% for key, value in item.sma_data.items() %}
+                            {% if value > item.closing_place %}
+                                <li><strong>{{ key }}: {{ value }}</strong></li>
+                            {% else %}
+                                <li>{{ key }}: {{ value }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

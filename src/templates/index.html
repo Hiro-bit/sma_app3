@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,7 +22,7 @@
             <tr>
                 <td class="bold">{{ item.stock_code }}</td>
                 <td class="bold">{{ item.company_name }}</td>
-                <td {% if item.closing_place < max_sma_values[item.stock_code] %} class="bold" {% endif %}>{{ item.closing_place }}</td>
+                <td {% if item.closing_place < max_sma_values[item.stock_code] %} class="bold" {% endif %}>{{ item.closing_place }}円</td>
                 <td>{{ item.dividend_yield }}</td>
                 <td>
                     <ul>

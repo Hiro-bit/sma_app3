@@ -6,12 +6,15 @@ from yahoo_finance_api2.exceptions import YahooFinanceError
 import requests
 import lxml.html
 import re
+import threading
+import time
+import ast
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///stocks.db'
 db = SQLAlchemy(app)
 
-# データベースモデルの定義
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     stock_code = db.Column(db.Integer, unique=True, nullable=False)
@@ -23,30 +26,55 @@ class Stock(db.Model):
     def __repr__(self):
         return f"<Stock {self.stock_code}>"
 
-# ルートの定義
+stock_codes = [1343, 1489, 1723, 1835, 1928, 1951, 2003, 2124, 2169, 2296, 2393, 3076, 3817, 3834, 4008, 4041, 4042, 4220, 4502, 4641, 4743, 4748,
+               4832, 5011, 5334, 5388, 5464, 6073, 6322, 6454, 6539, 6745, 6957, 7203, 7820, 7921, 7931, 7995, 8031, 8058, 8130, 8306, 8316, 8584,
+               8591, 8593, 8750, 8766, 9069, 9142, 9303, 9368, 9432, 9433, 9436, 9513, 9769, 9795, 9882, 9960, 9986]
+
+def save_stock_to_db(stock_data):
+    with app.app_context():
+        stock = Stock.query.filter_by(stock_code=stock_data['stock_code']).first()
+        if stock:
+            stock.closing_place = stock_data['closing_place']
+            stock.dividend_yield = stock_data['dividend_yield']
+            stock.sma_data = json.dumps(stock_data['sma_data'])
+        else:
+            stock = Stock(
+                stock_code=stock_data['stock_code'],
+                company_name=stock_data['company_name'],
+                closing_place=stock_data['closing_place'],
+                dividend_yield=stock_data['dividend_yield'],
+                sma_data=json.dumps(stock_data['sma_data'])
+            )
+            db.session.add(stock)
+        db.session.commit()
+
+def fetch_stock_data():
+    while True:
+        for stock_code in stock_codes:
+            stock_data = get_stock_data(stock_code)
+            save_stock_to_db(stock_data)
+        time.sleep(300)
+
 @app.route('/')
 def index():
     data = []
-    max_sma_values = {}  # 銘柄ごとのSMAデータの最大値を保持する辞書
-    # stock_codesの定義を削除し、代わりにこの部分で銘柄コードを直接指定する
-    stock_codes = [1343, 1489, 1723, 1835, 1928, 1951, 2003, 2124, 2169, 2296, 2393, 3076, 3817, 3834, 4008, 4041, 4042, 4220, 4502, 4641, 4743, 4748, \
-               4832, 5011, 5334, 5388, 5464, 6073, 6322, 6454, 6539, 6745, 6957, 7820, 7921, 7931, 7995, 8031, 8058, 8130, 8306, 8316, 8584, \
-               8591, 8593, 8750, 8766, 9069, 9142, 9303, 9368, 9432, 9433, 9436, 9513, 9769, 9795, 9882, 9960, 9986]
-    for stock_code in stock_codes:
-        stock_data = get_stock_data(stock_code)
-        if stock_data['sma_data']:  # SMAデータが空でない場合のみ最大値を計算して保存
-            max_sma_values[stock_code] = float(max(stock_data['sma_data'].values()))
+    max_sma_values = {}
+    stocks = Stock.query.all()
+    for stock in stocks:
+        sma_data = json.loads(stock.sma_data) if stock.sma_data else {}
+        stock_data = {
+            'stock_code': stock.stock_code,
+            'company_name': stock.company_name,
+            'closing_place': stock.closing_place,
+            'dividend_yield': stock.dividend_yield,
+            'sma_data': sma_data
+        }
+        if sma_data:
+            max_sma_values[stock.stock_code] = float(max(sma_data.values()))
+            print(max_sma_values)
         data.append(stock_data)
-
     return render_template('index.html', data=data, max_sma_values=max_sma_values)
 
-# データベースに株式データを保存する関数
-def save_stock_to_db(stock_data):
-    stock = Stock(stock_code=stock_data['stock_code'], company_name=stock_data['company_name'], closing_place=stock_data['closing_place'], dividend_yield=stock_data['dividend_yield'], sma_data=str(stock_data['sma_data']))
-    db.session.add(stock)
-    db.session.commit()
-
-# その他の関数の定義
 def get_stock_data(stock_code):
     chart_url = f"https://minkabu.jp/stock/{stock_code}/chart"
     try:
@@ -57,10 +85,8 @@ def get_stock_data(stock_code):
         dividend_yield = parse_dom_tree2(chart_dom_tree, '//*[@id="contents"]/div[3]/div[1]/div/div/div[2]/div/div[2]//tr[3]/td[1]', '%', '')
         company_name = parse_dom_tree3(chart_dom_tree, '//*[@id="stock_header_contents"]/div[1]/div/div[1]/div/div/div[1]/div[1]/h2/a/p')
 
-        # SMAデータを取得
         sma_data = get_sma_data(chart_dom_tree, stock_code)
 
-        # データが取得できなかった場合の処理を追加
         if closing_place is None or closing_place == '---':
             closing_place = 0
         if dividend_yield is None or dividend_yield == '---':
@@ -74,7 +100,6 @@ def get_stock_data(stock_code):
 def get_sma_data(dom_tree, stock_code):
     sma_data = {}
 
-    # SMA計算用のデータフレームを作成
     symbol_data_day = get_historical_data(stock_code, share.PERIOD_TYPE_YEAR, 100, share.FREQUENCY_TYPE_DAY, 1)
     df_day = pd.DataFrame(symbol_data_day)
     symbol_data_week = get_historical_data(stock_code, share.PERIOD_TYPE_YEAR, 100, share.FREQUENCY_TYPE_WEEK, 1)
@@ -82,12 +107,10 @@ def get_sma_data(dom_tree, stock_code):
     symbol_data_month = get_historical_data(stock_code, share.PERIOD_TYPE_YEAR, 100, share.FREQUENCY_TYPE_MONTH, 1)
     df_month = pd.DataFrame(symbol_data_month)
 
-    # SMAを計算
     df_day, sma_day_columns = sma_day(df_day)
     df_week, sma_week_columns = sma_week(df_week)
     df_month, sma_month_columns = sma_month(df_month)
 
-    # SMAデータを辞書に追加
     for column in sma_day_columns:
         sma_data[column] = df_day[column].iloc[-1]
     for column in sma_week_columns:
@@ -160,10 +183,12 @@ def parse_dom_tree2(dom_tree, xpath, replace_pattern, replace_value):
 def parse_dom_tree3(dom_tree, xpath):
     element = dom_tree.xpath(xpath)
     if element:
-        return element[0].text.strip()
+        text = element[0].text.strip() if element[0].text else ''
+        return text
     else:
         return None
 
-# Flaskアプリケーションのエントリーポイント
 if __name__ == '__main__':
+    data_fetcher_thread = threading.Thread(target=fetch_stock_data)
+    data_fetcher_thread.start()
     app.run(debug=True)

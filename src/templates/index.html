@@ -22,7 +22,9 @@
             <tr>
                 <td class="bold">{{ item.stock_code }}</td>
                 <td class="bold">{{ item.company_name }}</td>
-                <td {% if item.closing_place < max_sma_values[item.stock_code] %} class="bold" {% endif %}>{{ item.closing_place }}円</td>
+                <!-- <td {% if item.closing_place < max_sma_values[item.stock_code] %} class="bold" {% endif %}>{{ item.closing_place }}円</td> -->
+                <!-- <td {% if item.closing_place < max_sma_values.get(item.stock_code, 0) %} class="bold" {% endif %}>{{ item.closing_place }}円</td> -->
+                <td {% if item.closing_place < max_sma_values.get(item.stock_code, 0) %} class="bold" {% endif %}>{{ item.closing_place }}円</td>
                 <td>{{ item.dividend_yield }}</td>
                 <td>
                     <ul>

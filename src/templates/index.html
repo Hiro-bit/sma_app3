@@ -5,6 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMA Data</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Table style */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Table header style */
+        th {
+            background-color: #f2f2f2;
+            padding: 8px;
+            text-align: left;
+        }
+
+        /* Table cell style */
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        /* Bold style for closing place when SMA is higher */
+        td.bold {
+            font-weight: bold;
+        }
+
+        /* List style for SMA data */
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Strong style for SMA data when higher than closing place */
+        li strong {
+            font-weight: bold;
+            color: #007bff; /* Blue color */
+        }
+
+        /* Blue color for Dividend Yield when >= 3.75 */
+        .blue {
+            color: #007bff; /* Blue color */
+        }
+    </style>
 </head>
 <body>
     <table border="1">
@@ -22,10 +64,15 @@
             <tr>
                 <td class="bold">{{ item.stock_code }}</td>
                 <td class="bold">{{ item.company_name }}</td>
-                <!-- <td {% if item.closing_place < max_sma_values[item.stock_code] %} class="bold" {% endif %}>{{ item.closing_place }}円</td> -->
-                <!-- <td {% if item.closing_place < max_sma_values.get(item.stock_code, 0) %} class="bold" {% endif %}>{{ item.closing_place }}円</td> -->
-                <td {% if item.closing_place < max_sma_values.get(item.stock_code, 0) %} class="bold" {% endif %}>{{ item.closing_place }}円</td>
-                <td>{{ item.dividend_yield }}</td>
+                <td class="bold">{{ item.dividend_yield }}</td>
+                <td
+                    {% if item.closing_place < max_sma_values.get(item.stock_code, 0) %}
+                        class="bold"
+                    {% endif %}
+                >
+                    {{ item.closing_place }}円
+                </td>
+                <td {% if item.dividend_yield >= 3.75 %} class="blue" {% endif %}>{{ item.dividend_yield }}</td>
                 <td>
                     <ul>
                         {% for key, value in item.sma_data.items() %}

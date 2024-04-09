@@ -107,27 +107,29 @@ def get_historical_data(stock_code, period_type, period, frequency_type, frequen
         return []
 
 def sma_day(df_day):
-    df_day["sma_day_025"] = df_day["close"].rolling(window=25).mean().round(2)
-    df_day["sma_day_075"] = df_day["close"].rolling(window=75).mean().round(2)
-    df_day["sma_day_100"] = df_day["close"].rolling(window=100).mean().round(2)
-    df_day["sma_day_200"] = df_day["close"].rolling(window=200).mean().round(2)
+    df_day["sma_day_025"] = df_day["close"].rolling(window=25).mean().round()
+    df_day["sma_day_025"] = df_day["close"].rolling(window=25).mean().round()
+    df_day["sma_day_075"] = df_day["close"].rolling(window=75).mean().round()
+    df_day["sma_day_100"] = df_day["close"].rolling(window=100).mean().round()
+    df_day["sma_day_200"] = df_day["close"].rolling(window=200).mean().round()
     sma_day_columns = [col for col in df_day.columns if col.startswith('sma_day_')]
     return df_day, sma_day_columns
 
 def sma_week(df_week):
-    df_week["sma_week_025"] = df_week["close"].rolling(window=25).mean().round(2)
-    df_week["sma_week_075"] = df_week["close"].rolling(window=75).mean().round(2)
-    df_week["sma_week_100"] = df_week["close"].rolling(window=100).mean().round(2)
-    df_week["sma_week_200"] = df_week["close"].rolling(window=200).mean().round(2)
+    df_week["sma_week_013"] = df_week["close"].rolling(window=13).mean().round()
+    df_week["sma_week_026"] = df_week["close"].rolling(window=26).mean().round()
+    df_week["sma_week_052"] = df_week["close"].rolling(window=52).mean().round()
+    df_week["sma_week_100"] = df_week["close"].rolling(window=100).mean().round()
+    df_week["sma_week_200"] = df_week["close"].rolling(window=200).mean().round()
     sma_week_columns = [col for col in df_week.columns if col.startswith('sma_week_')]
     return df_week, sma_week_columns
 
 def sma_month(df_month):
-    df_month["sma_month_012"] = df_month["close"].rolling(window=12).mean().round(2)
-    df_month["sma_month_024"] = df_month["close"].rolling(window=24).mean().round(2)
-    df_month["sma_month_060"] = df_month["close"].rolling(window=60).mean().round(2)
-    df_month["sma_month_100"] = df_month["close"].rolling(window=100).mean().round(2)
-    df_month["sma_month_200"] = df_month["close"].rolling(window=200).mean().round(2)
+    df_month["sma_month_012"] = df_month["close"].rolling(window=12).mean().round()
+    df_month["sma_month_024"] = df_month["close"].rolling(window=24).mean().round()
+    df_month["sma_month_060"] = df_month["close"].rolling(window=60).mean().round()
+    df_month["sma_month_100"] = df_month["close"].rolling(window=100).mean().round()
+    df_month["sma_month_200"] = df_month["close"].rolling(window=200).mean().round()
     sma_month_columns = [col for col in df_month.columns if col.startswith('sma_month_')]
     return df_month, sma_month_columns
 
